@@ -19,7 +19,7 @@ router.get('/runners/add', function (req, res) {
 });
 
 router.get('/about', function (req, res) {
-  res.send('About api');
+  res.send('<ul><li>api/runners</li><li>api/runners/add</li></ul>');
 });
 
 router.get('/db/download', (req, res) => {
