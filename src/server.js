@@ -82,7 +82,7 @@ wss.on('connection', (ws) => {
 });
 
 //start our server
-server.listen(12250, () => {
+server.listen(443, () => {
   console.log(`Server started on port ${server.address().port} :)`);
 });
 
