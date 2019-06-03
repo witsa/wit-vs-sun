@@ -82,7 +82,7 @@ wss.on('connection', (ws) => {
 });
 
 //start our server
-server.listen(443, () => {
+server.listen(process.env.port || 8999, () => {
   console.log(`Server started on port ${server.address().port} :)`);
 });
 
@@ -97,8 +97,8 @@ api.dbs = dbs;
 api.wss = wss;
 app.use('/api', api);
 
-var port = process.env.port || 3210;
-app.listen(port, function () {
-  console.log('Appria started! ' + port + '!');
-});
+// var port = process.env.port || 3210;
+// app.listen(port, function () {
+//   console.log('Appria started! ' + port + '!');
+// });
 
