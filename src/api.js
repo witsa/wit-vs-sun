@@ -1,6 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
+const ress = require('./ress');
 
 // middleware that is specific to this router
 router.use((req, res, next) => {
@@ -20,6 +21,12 @@ router.get('/runners/add', function (req, res) {
 
 router.get('/about', function (req, res) {
   res.send('<ul><li>api/runners</li><li>api/runners/add</li></ul>');
+});
+
+router.get('/ress', function (req, res) {
+  ress.test(data => {
+    res.json(data);
+  });
 });
 
 router.get('/db/download', (req, res) => {

@@ -97,7 +97,7 @@ api.dbs = dbs;
 api.wss = wss;
 app.use('/api', api);
 
-var port = process.env.port || 3210;
+var port = process.env.port || 12251;
 app.listen(port, function () {
   console.log('Appria started! ' + port + '!');
 });
