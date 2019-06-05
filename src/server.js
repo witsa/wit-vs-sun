@@ -7,6 +7,8 @@ const MessageServe = require('./message-serve');
 const DB = require('./db');
 const Running = require('./running');
 const app = express();
+var cors = require('cors');
+app.use(cors());
 
 //initialize a simple http server
 const server = http.createServer(app);

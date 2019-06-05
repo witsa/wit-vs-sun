@@ -2,8 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const redy = require('./redy');
-const moment = require('moment');
-const { hash } = require('rsvp');
 
 var sendError = (res, error) => {
   res.status(error.code || 500).json(error);
@@ -44,6 +42,32 @@ router.get('/runs/stop', function (req, res) {
       sendError(res, error);
     }
   );
+});
+
+router.get('/bikeA', function (req, res) {
+  var response = {
+    bike: router.db.getBike('A')
+  }
+
+  if (response.bike.runId) {
+    response.run = router.db.getRun(response.bike.runId);
+    response.runner = router.db.getRunner(response.run.runnerId);
+  }
+
+  res.json(response);
+});
+
+router.get('/bikeB', function (req, res) {
+  var response = {
+    bike: router.db.getBike('B')
+  }
+
+  if (response.bike.runId) {
+    response.run = router.db.getRun(response.bike.runId);
+    response.runner = router.db.getRunner(response.run.runnerId);
+  }
+
+  res.json(response);
 });
 
 router.get('/about', function (req, res) {

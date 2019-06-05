@@ -19,6 +19,8 @@ class Running {
     if (this.bikeB.runId) {
       this.startInterval('B');
     }
+
+    this.delay = 3000;
   }
 
   get bikeA() {
@@ -93,6 +95,7 @@ class Running {
         stopEnergy: null,
         energy: 0,
         bestPower: 0,
+        avgPower: 0,
         sunStartEnergy: 0,
         sunStopEnergy: null,
         sunBestPower: 0,
@@ -108,6 +111,7 @@ class Running {
         run.start = new Date();
         run.startEnergy = data.bike.energy;
         run.bestPower = data.bike.power;
+        run.avgPower = data.bike.power;
         run.sunBestPower = data.sun.power;
         run.sunStartEnergy = data.sun.energy;
 
@@ -122,7 +126,7 @@ class Running {
         // place run dans bike[A/B]
         bike.power = data.bike.power;
         bike.runId = run.id;
-        bike = this.db.updateBike(run, bike);
+        bike = this.db.updateBike(bike);
 
         // démarre la récupération des données du bike
         this.db.writeAll();
@@ -132,7 +136,7 @@ class Running {
 
         this.startInterval(bikeName);
 
-        resolve(run);
+        resolve({ bike: bike, run: run, runner: runner });
       }, error => {
         reject(this.createError(500, 'api/runs/start', 'An error occured during start run.'));
       });
@@ -191,6 +195,7 @@ class Running {
         run.stop = new Date();
         run.stopEnergy = data.bike.energy;
         run.energy = run.stopEnergy - run.startEnergy;
+        run.avgPower = run.energy / (run.stop - run.start) * this.delay;
         run.bestPower = Math.max(run.bestPower, data.bike.power);
         run.sunBestPower = Math.max(run.sunBestPower, data.sun.power);
         run.sunStopEnergy = data.sun.energy;
@@ -209,7 +214,7 @@ class Running {
         // broadcast run:stop
         this.messageServe.broadcast('run:stop', { bike: bike, run: run, runner: runner });
 
-        resolve(run);
+        resolve({ bike: bike, run: run, runner: runner });
       }, error => {
         reject(this.createError(500, 'running:stop', 'An error occured during stop run.'));
       });
@@ -228,7 +233,7 @@ class Running {
       this.stopInterval(bikeName);
     }
 
-    this.intervales[bikeName] = setInterval(this[`syncBike${bikeName}`].bind(this), 3000);
+    this.intervales[bikeName] = setInterval(this[`syncBike${bikeName}`].bind(this), this.delay);
   }
 
   stopInterval(bikeName) {
@@ -266,6 +271,7 @@ class Running {
 
         run.energy = data.energy - run.startEnergy;
         run.bestPower = Math.max(data.power, run.bestPower);
+        run.avgPower = run.energy / (new Date() - run.start) * this.delay;
         run = this.db.updateRun(run);
 
         this.syncRunner(runner, run);
