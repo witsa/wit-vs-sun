@@ -4,40 +4,8 @@ const http = require("http");
 const WebSocket = require("ws");
 const path = require('path');
 const MessageServe = require('./message-serve');
-const low = require("lowdb");
-const lodashId = require('lodash-id')
-const FileSync = require("lowdb/adapters/FileSync");
-const adapters = {
-  runners: new FileSync('db/runners.json'),
-  runs: new FileSync('db/runs.json'),
-  bikes: new FileSync('db/bikes.json')
-};
-const dbs = {
-  runners: low(adapters.runners),
-  runs: low(adapters.runs),
-  bikes: low(adapters.bikes)
-};
-dbs.runners._.mixin(lodashId);
-dbs.runs._.mixin(lodashId);
-dbs.bikes._.mixin(lodashId);
-
-// Set some defaults
-dbs.runners.defaults({ runners: [] })
-  .write();
-dbs.runs.defaults({ runs: [] })
-  .write();
-dbs.bikes.defaults({
-  A: {
-    name: 'A',
-    runId: null
-  },
-  B: {
-    name: 'B',
-    runId: null
-  }
-})
-  .write();
-
+const DB = require('./db');
+const Running = require('./running');
 const app = express();
 
 //initialize a simple http server
@@ -45,7 +13,7 @@ const server = http.createServer(app);
 
 //initialize the WebSocket server instance
 const wss = new WebSocket.Server({ server });
-var messageServe = new MessageServe(wss, adapters);
+var messageServe = new MessageServe(wss);
 wss.on('connection', (ws) => {
 
   //connection is up, let's add a simple simple event
@@ -93,8 +61,9 @@ console.log(__dirname + '/../public');
 
 
 const api = require('./api');
-api.dbs = dbs;
-api.wss = wss;
+api.db = new DB();
+api.messageServe = messageServe;
+api.running = new Running(api.db, messageServe);
 app.use('/api', api);
 
 var port = process.env.port || 12251;

@@ -1,32 +1,65 @@
 
 const express = require('express');
 const router = express.Router();
-const ress = require('./ress');
+const redy = require('./redy');
+const moment = require('moment');
+const { hash } = require('rsvp');
 
-// middleware that is specific to this router
+var sendError = (res, error) => {
+  res.status(error.code || 500).json(error);
+};
+
 router.use((req, res, next) => {
   console.log('Time: ', Date.now());
   next();
 });
 
 router.get('/runners', function (req, res) {
-  res.json(router.dbs.runners.get('runners').value());
+  res.json(router.db.getRunners());
 });
 
 router.get('/runners/add', function (req, res) {
-  var runner = router.dbs.runners.get('runners').insert({ name: req.query.name }).write();
-  router.wss.clients.forEach(ws => ws.send(JSON.stringify({ type: 'runners/add', data: runner})));
+  var runner = router.db.insertRunner(req.query.name);
+  router.messageServe.broadcast('runners:add', runner);
   res.json(runner);
+});
+
+router.get('/runs/start', function (req, res) {
+  router.running.start({ runnerId: req.query.runnerId, bikeName: req.query.bikeName }).then(
+    run => {
+      res.json(run);
+    },
+    error => {
+      sendError(res, error);
+    }
+  );
+});
+
+router.get('/runs/stop', function (req, res) {
+  router.running.stop(req.query.bikeName).then(
+    run => {
+      res.json(run);
+    },
+    error => {
+      sendError(res, error);
+    }
+  );
 });
 
 router.get('/about', function (req, res) {
   res.send('<ul><li>api/runners</li><li>api/runners/add</li></ul>');
 });
 
-router.get('/ress', function (req, res) {
-  ress.test(data => {
-    res.json(data);
-  });
+router.get('/redy/a', function (req, res) {
+  redy.getA().then(data => res.json(data));
+});
+
+router.get('/redy/b', function (req, res) {
+  redy.getB().then(data => res.json(data));
+});
+
+router.get('/redy/sun', function (req, res) {
+  redy.getSun().then(data => res.json(data));
 });
 
 router.get('/db/download', (req, res) => {
