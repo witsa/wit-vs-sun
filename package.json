@@ -16,7 +16,7 @@
     "lodash-id": "^0.14.0",
     "lowdb": "^1.0.0",
     "moment": "^2.24.0",
-    "openredy-sdk": "git+https://manufitoussiwit@bitbucket.org/witsa/openredy-sdk.git#v1.0",
+    "openredy-sdk": "git+https://manufitoussiwit:yeyo22koala@bitbucket.org/witsa/openredy-sdk.git#v1.0",
     "rsvp": "^4.8.4",
     "ws": "^7.0.0"
   },
