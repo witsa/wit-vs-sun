@@ -12,6 +12,8 @@ class Running {
       B: null
     };
 
+    this.delay = 3000;
+
     if (this.bikeA.runId) {
       this.startInterval('A');
     }
@@ -19,8 +21,6 @@ class Running {
     if (this.bikeB.runId) {
       this.startInterval('B');
     }
-
-    this.delay = 3000;
   }
 
   get bikeA() {
