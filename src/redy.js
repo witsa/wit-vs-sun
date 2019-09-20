@@ -15,7 +15,7 @@ var paths = {
   powerSun: ':easy.RESS.WVS.Sun.R00025.Value'
 };
 
-let configuration = new ApiConfiguration(device.url, { user: device.user, password: device.password });
+let configuration = new ApiConfiguration(device.url, { user: device.user, password: device.password }, { clientId: '79DF4D4B533313E7', clientSecret: '70B42D7041379369' } );
 let client = new ApiClientWithOAuth(configuration);
 let service = new WosApi(client);
 
