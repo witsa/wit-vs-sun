@@ -1,13 +1,16 @@
 const redy = require('./redy');
 const moment = require('moment');
-const { hash, Promise } = require('rsvp');
+const {
+  hash,
+  Promise
+} = require('rsvp');
 
 class Running {
 
   constructor(db, messageServe) {
     this.db = db;
     this.messageServe = messageServe;
-    this.intervales = {
+    this.intervals = {
       A: null,
       B: null
     };
@@ -36,7 +39,11 @@ class Running {
   }
 
   createError(code, origin, message) {
-    return { code: code, origin: origin || 'unknow', message: message };
+    return {
+      code: code,
+      origin: origin || 'unknown',
+      message: message
+    };
   }
 
   sendErrorMessage(code, origin, message) {
@@ -50,9 +57,12 @@ class Running {
     return bike;
   }
 
-  start({ runnerId, bikeName }) {
+  start({
+    runnerId,
+    bikeName
+  }) {
     return new Promise((resolve, reject) => {
-      console.log('Strating a run...');
+      console.log('Starting a run...');
       if (!runnerId) {
         console.log('aborted');
         reject(this.createError(400, 'running:start', 'runnerId is required'));
@@ -108,44 +118,56 @@ class Running {
         bike: redy[`get${run.bikeName}`](),
         sun: redy.getSun()
       }).then(data => {
-        run.start = new Date();
-        run.startEnergy = data.bike.energy;
-        run.bestPower = data.bike.power;
-        run.avgPower = data.bike.power;
-        run.sunBestPower = data.sun.power;
-        run.sunStartEnergy = data.sun.energy;
+        try {
+          run.start = new Date();
+          run.startEnergy = data.bike.energy;
+          run.bestPower = data.bike.power;
+          run.avgPower = data.bike.power;
+          run.sunBestPower = data.sun.power;
+          run.sunStartEnergy = data.sun.energy;
 
-        // ajoute run à la liste
-        run = this.db.insertRun(run);
-        console.log('run:', run);
+          // ajoute run à la liste
+          run = this.db.insertRun(run);
+          console.log('run:', run);
 
-        runner.runsCount++;
-        this.syncRunner(runner, run);
-        runner = this.db.updateRunner(runner);
+          runner.runsCount++;
+          this.syncRunner(runner, run);
+          runner = this.db.updateRunner(runner);
 
-        // place run dans bike[A/B]
-        bike.power = data.bike.power;
-        bike.runId = run.id;
-        bike = this.db.updateBike(bike);
+          // place run dans bike[A/B]
+          bike.power = data.bike.power;
+          bike.runId = run.id;
+          bike = this.db.updateBike(bike);
 
-        // démarre la récupération des données du bike
-        this.db.writeAll();
+          // démarre la récupération des données du bike
+          this.db.writeAll();
 
-        // broadcast run:start
-        this.messageServe.broadcast('run:start', { bike: bike, run: run, runner: runner });
+          // broadcast run:start
+          this.messageServe.broadcast('run:start', {
+            bike: bike,
+            run: run,
+            runner: runner
+          });
 
-        this.startInterval(bikeName);
+          this.startInterval(bikeName);
 
-        resolve({ bike: bike, run: run, runner: runner });
+          resolve({
+            bike: bike,
+            run: run,
+            runner: runner
+          });
+        } catch (error) {
+          reject(this.createError(500, 'running:start', error.message || 'An error occurred during start run.'));
+        }
       }, error => {
-        reject(this.createError(500, 'api/runs/start', 'An error occured during start run.'));
+        reject(this.createError(500, 'running:start', error.message || 'An error occurred during start run.'));
       });
     });
   }
 
   stop(bikeName) {
     return new Promise((resolve, reject) => {
-      console.log('Stoping run...');
+      console.log('Stopping run...');
 
       if (!bikeName) {
         console.log('aborted');
@@ -192,31 +214,44 @@ class Running {
         bike: redy[`get${run.bikeName}`](),
         sun: redy.getSun()
       }).then(data => {
-        run.stop = new Date();
-        run.stopEnergy = data.bike.energy;
-        run.energy = run.stopEnergy - run.startEnergy;
-        run.avgPower = run.energy / (run.stop - run.start) * this.delay;
-        run.bestPower = Math.max(run.bestPower, data.bike.power);
-        run.sunBestPower = Math.max(run.sunBestPower, data.sun.power);
-        run.sunStopEnergy = data.sun.energy;
 
-        // update run
-        run = this.db.updateRun(run);
-        console.log('run:', run);
+        try {
+          run.stop = new Date();
+          run.stopEnergy = data.bike.energy;
+          run.energy = run.stopEnergy - run.startEnergy;
+          run.avgPower = run.energy / (run.stop - run.start) * this.delay;
+          run.bestPower = Math.max(run.bestPower, data.bike.power);
+          run.sunBestPower = Math.max(run.sunBestPower, data.sun.power);
+          run.sunStopEnergy = data.sun.energy;
 
-        bike = this.removeRunFromBike(bike);
+          // update run
+          run = this.db.updateRun(run);
+          console.log('run:', run);
 
-        this.syncRunner(runner, run);
-        runner = this.db.updateRunner(runner);
+          bike = this.removeRunFromBike(bike);
 
-        this.db.writeAll();
+          this.syncRunner(runner, run);
+          runner = this.db.updateRunner(runner);
 
-        // broadcast run:stop
-        this.messageServe.broadcast('run:stop', { bike: bike, run: run, runner: runner });
+          this.db.writeAll();
 
-        resolve({ bike: bike, run: run, runner: runner });
+          // broadcast run:stop
+          this.messageServe.broadcast('run:stop', {
+            bike: bike,
+            run: run,
+            runner: runner
+          });
+
+          resolve({
+            bike: bike,
+            run: run,
+            runner: runner
+          });
+        } catch (error) {
+          reject(this.createError(500, 'running:stop', error.message || 'An error occurred during stop run.'));
+        }
       }, error => {
-        reject(this.createError(500, 'running:stop', 'An error occured during stop run.'));
+        reject(this.createError(500, 'running:stop', error.message || 'An error occurred during stop run.'));
       });
 
     });
@@ -224,21 +259,21 @@ class Running {
 
   syncRunner(runner, run) {
     runner.bestPower = Math.max(run.bestPower, runner.bestPower);
-    runner.duration = run.runnerStartDuration +  (run.stop ? moment(run.stop) : moment()) - moment(run.start);
+    runner.duration = run.runnerStartDuration + (run.stop ? moment(run.stop) : moment()) - moment(run.start);
     runner.energy = run.runnerStartEnergy + run.energy;
   }
 
   startInterval(bikeName) {
-    if (this.intervales[bikeName]) {
+    if (this.intervals[bikeName]) {
       this.stopInterval(bikeName);
     }
 
-    this.intervales[bikeName] = setInterval(this[`syncBike${bikeName}`].bind(this), this.delay);
+    this.intervals[bikeName] = setInterval(this[`syncBike${bikeName}`].bind(this), this.delay);
   }
 
   stopInterval(bikeName) {
-    clearInterval(this.intervales[bikeName]);
-    this.intervales[bikeName] = null;
+    clearInterval(this.intervals[bikeName]);
+    this.intervals[bikeName] = null;
   }
 
   syncBike(bikeName) {
@@ -276,7 +311,7 @@ class Running {
 
         this.syncRunner(runner, run);
         runner = this.db.updateRunner(runner);
-        
+
         this.db.writeAll();
 
         this.messageServe.broadcast(`sync:bike${bikeName}`, {
@@ -286,7 +321,7 @@ class Running {
         })
       },
       error => {
-        this.sendErrorMessage(500, `running:syncBike${bikeName}`, `error durring syncbike${bikeName}.`);
+        this.sendErrorMessage(500, `running:syncBike${bikeName}`, `error durring syncbike${bikeName}. ${error.message || ''}`);
       }
     );
   }
